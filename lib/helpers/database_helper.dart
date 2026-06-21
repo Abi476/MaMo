@@ -45,7 +45,9 @@ class DatabaseHelper {
         nama_tempat TEXT,
         deskripsi TEXT,
         latitude REAL,
-        longitude REAL
+        longitude REAL,
+        is_favorite INTEGER DEFAULT 0,
+        image_path TEXT
       )
     ''');
   }
@@ -131,6 +133,17 @@ class DatabaseHelper {
     return await db.update(
       'destinasi',
       lokasiBaru,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // --- FUNGSI BARU UNTUK UPDATE STATUS FAVORIT ---
+  Future<int> updateDestinasiFavorit(int id, int isFavorite) async {
+    final db = await database;
+    return await db.update(
+      'destinasi', // Sesuaikan dengan nama tabel destinasimu (biasanya 'destinasi')
+      {'is_favorite': isFavorite},
       where: 'id = ?',
       whereArgs: [id],
     );

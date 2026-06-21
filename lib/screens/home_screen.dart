@@ -17,22 +17,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // 1. Tambahkan GlobalKey untuk CurvedNavigationBar (sebagai "remote control")
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey<CurvedNavigationBarState>();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
 
-  // Penanda agar saat kita kembalikan animasi secara paksa, aplikasinya tidak looping
   bool _isReverting = false; 
 
+  // PERBAIKAN: Hubungkan remot onProfileTap di sini
   List<Widget> get _pages => [
-    const DashboardScreen(),
+    DashboardScreen(
+      onProfileTap: () {
+        // Saat foto profil di Dashboard diklik, geser navbar ke index 3 secara animasi
+        _bottomNavigationKey.currentState?.setPage(3);
+      },
+    ),
     const EksplorScreen(), 
     const FavoritesScreen(), 
     ProfileScreen(key: _profileKey), 
   ];
 
   void _onItemTapped(int index) async {
-    // Jika sedang proses mengembalikan animasi paksa, abaikan ketukan user sementara
     if (_isReverting) return;
 
     if (_selectedIndex == 3 && index != 3) {
@@ -42,17 +45,15 @@ class _HomeScreenState extends State<HomeScreen> {
         bool? tinggalkan = await _tampilkanDialogBelumSimpan();
         
         if (tinggalkan != true) {
-          // JIKA BATAL: Paksa navbar kembali ke ikon profil (index 3)
           _isReverting = true;
           _bottomNavigationKey.currentState?.setPage(3);
           
-          // Lepas pengaman setelah animasi navbar selesai (sekitar 300ms)
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {
               setState(() { _isReverting = false; });
             }
           });
-          return; // Gagalkan perpindahan halaman
+          return; 
         }
       }
     }
@@ -251,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
         extendBody: true, 
         body: _pages[_selectedIndex],
         bottomNavigationBar: CurvedNavigationBar(
-          key: _bottomNavigationKey, // 2. Daftarkan remotenya di sini!
+          key: _bottomNavigationKey, 
           index: _selectedIndex,
           height: 65.0,
           color: Colors.white, 
