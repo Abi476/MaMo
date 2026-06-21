@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../helpers/database_helper.dart';
@@ -16,6 +17,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  // Controller untuk form Lupa Password
+  final TextEditingController _forgotEmailController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
 
   // Fungsi ala SweetAlert
   void _showAlert(String title, String message, bool isSuccess, VoidCallback onOk) {
@@ -93,6 +98,103 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // FUNGSI BOTTOM SHEET POP-UP LUPA PASSWORD
+  void _showForgotPasswordSheet() {
+    _forgotEmailController.clear();
+    _newPasswordController.clear();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          top: 24, left: 24, right: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: Text(
+                'Reset Password',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Masukkan email Anda yang terdaftar dan buat kata sandi baru.',
+              style: TextStyle(color: Colors.black54, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _forgotEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'Email Address terdaftar',
+                prefixIcon: const Icon(Icons.email),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _newPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                hintText: 'Password Baru',
+                prefixIcon: const Icon(Icons.lock),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () async {
+                  String email = _forgotEmailController.text.trim();
+                  String newPass = _newPasswordController.text.trim();
+
+                  if (email.isEmpty || newPass.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Email dan Password baru wajib diisi!')),
+                    );
+                    return;
+                  }
+
+                  // Cek apakah email ada di database SQFlite
+                  bool emailExist = await _dbHelper.checkEmailExists(email);
+                  
+                  if (!mounted) return;
+
+                  if (emailExist) {
+                    await _dbHelper.resetPasswordByEmail(email, newPass);
+                    Navigator.pop(context); // Tutup bottom sheet
+                    _showAlert('Berhasil Reset', 'Password berhasil diperbarui. Silakan login kembali.', true, () {});
+                  } else {
+                    Navigator.pop(context);
+                    _showAlert('Email Tidak Ditemukan', 'Maaf, email tersebut belum terdaftar di sistem kami.', false, () {});
+                  }
+                },
+                child: const Text(
+                  'Perbarui Password',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,8 +206,13 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo / Ilustrasi MaMo
-                const Icon(Icons.explore, size: 100, color: Colors.blueAccent),
+                // Logo Kustom
+                Image.asset(
+                  'assets/images/app_logo.png',
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.contain,
+                ),
                 const SizedBox(height: 10),
                 const Text(
                   'MaMo',
@@ -131,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         text: "Don't have an account? ",
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                         children: [
-                          TextSpan(text: 'Sign up', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                          TextSpan(text: 'Register', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -139,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Form Input
+                // Form Input Email
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -151,6 +258,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                
+                // Form Input Password
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -161,7 +270,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 12),
+
+                // TOMBOL LUPA PASSWORD
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _showForgotPasswordSheet,
+                    child: const Text(
+                      'Lupa Password?',
+                      style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
                 // Tombol Login
                 SizedBox(
@@ -173,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: Colors.blueAccent,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: const Text('Sign in', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    child: const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
               ],

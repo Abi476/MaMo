@@ -70,8 +70,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     
-    // Kembali ke Dashboard dan mengirim sinyal "true" bahwa ada update
-    Navigator.pop(context, true); 
+    // PERBAIKAN: Cek apakah halaman ini ditumpuk (push) atau sebagai tab utama
+    // Jika bisa di-pop (dibuka dari icon top bar), maka kembali ke Dashboard
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, true); 
+    }
   }
 
   @override
@@ -82,12 +85,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
-        title: const Text('Edit Profil', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text('Pengaturan Profil', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        // Sembunyikan tombol back panah jika ini dibuka sebagai tab Navbar
+        automaticallyImplyLeading: Navigator.canPop(context),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 100), // Tambah padding bawah agar tidak tertutup curved navbar
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [

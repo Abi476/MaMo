@@ -92,6 +92,32 @@ class DatabaseHelper {
   }
 
   // ==========================================
+  // TAMBAHAN: LINGKUP FITUR LUPA PASSWORD
+  // ==========================================
+
+  // Cek apakah email terdaftar di database lokal
+  Future<bool> checkEmailExists(String email) async {
+    Database db = await database;
+    List<Map<String, dynamic>> result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    return result.isNotEmpty;
+  }
+
+  // Memperbarui password berdasarkan email
+  Future<int> resetPasswordByEmail(String email, String newPassword) async {
+    Database db = await database;
+    return await db.update(
+      'users',
+      {'password': newPassword},
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+  }
+
+  // ==========================================
   // LINGKUP FITUR: CRUD DATA UTAMA & MAPS
   // ==========================================
 

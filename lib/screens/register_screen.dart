@@ -111,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Header Sign Up
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Sign Up', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                  child: Text('Register', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 8),
                 Align(
@@ -123,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         text: "Already have an account? ",
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                         children: [
-                          TextSpan(text: 'Sign in', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                          TextSpan(text: 'Login', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
