@@ -15,7 +15,7 @@ class DatabaseHelper {
     return _database!;
   }
 
-  // 1. Inisialisasi Database
+  // Inisialisasi Database
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'ujikom_mobile.db');
     return await openDatabase(
@@ -25,15 +25,16 @@ class DatabaseHelper {
     );
   }
 
-  // 2. Membuat Tabel (Sesuai Ketentuan 2, 3, 4, dan 5)
+  // Membuat Tabel (Sesuai Ketentuan 2, 3, 4, dan 5)
   Future<void> _onCreate(Database db, int version) async {
     // Tabel untuk Fitur Login, Sign Up, dan Edit Profil
     await db.execute('''
-      CREATE TABLE users (
+      CREATE TABLE users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nama TEXT,
         email TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        profile_image_path TEXT
       )
     ''');
 
@@ -49,10 +50,7 @@ class DatabaseHelper {
     ''');
   }
 
-  // ==========================================
   // LINGKUP FITUR: LOGIN, SIGN UP, EDIT PROFIL
-  // ==========================================
-
   // Fitur Sign Up: Menyimpan user baru ke database
   Future<int> registerUser(Map<String, dynamic> user) async {
     Database db = await database;
@@ -91,10 +89,7 @@ class DatabaseHelper {
     );
   }
 
-  // ==========================================
   // TAMBAHAN: LINGKUP FITUR LUPA PASSWORD
-  // ==========================================
-
   // Cek apakah email terdaftar di database lokal
   Future<bool> checkEmailExists(String email) async {
     Database db = await database;
@@ -117,23 +112,20 @@ class DatabaseHelper {
     );
   }
 
-  // ==========================================
   // LINGKUP FITUR: CRUD DATA UTAMA & MAPS
-  // ==========================================
-
-  // C - Create (Tambah & Simpan Data)
+  // Create (Tambah & Simpan Data)
   Future<int> insertDestinasi(Map<String, dynamic> lokasi) async {
     Database db = await database;
     return await db.insert('destinasi', lokasi);
   }
 
-  // R - Read (Tampil Data untuk daftar tempat tujuan di aplikasi)
+  // Read (Tampil Data untuk daftar tempat tujuan di aplikasi)
   Future<List<Map<String, dynamic>>> getAllDestinasi() async {
     Database db = await database;
     return await db.query('destinasi', orderBy: 'id DESC');
   }
 
-  // U - Update (Ubah Data Tempat/Koordinat)
+  // Update (Ubah Data Tempat/Koordinat)
   Future<int> updateDestinasi(int id, Map<String, dynamic> lokasiBaru) async {
     Database db = await database;
     return await db.update(
@@ -144,7 +136,7 @@ class DatabaseHelper {
     );
   }
 
-  // D - Delete (Hapus Data - Opsional tapi melengkapi syarat CRUD)
+  // Delete (Hapus Data - Opsional tapi melengkapi syarat CRUD)
   Future<int> deleteDestinasi(int id) async {
     Database db = await database;
     return await db.delete(
