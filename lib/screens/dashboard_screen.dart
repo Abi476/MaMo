@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart'; 
 import 'package:path_provider/path_provider.dart'; 
 import 'package:path/path.dart' as p; 
-import 'package:geocoding/geocoding.dart'; // TAMBAHAN: Import geocoding
+import 'package:geocoding/geocoding.dart'; 
 
 import '../helpers/database_helper.dart';
 import 'login_screen.dart';
