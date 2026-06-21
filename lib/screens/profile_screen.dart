@@ -10,13 +10,19 @@ import '../helpers/database_helper.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  // PERBAIKAN 1: Tambahkan penanda dari mana layar ini dipanggil
+  final bool isFromDashboard; 
+  
+  const ProfileScreen({
+    super.key, 
+    this.isFromDashboard = false, // Secara bawaan diatur false (Artinya dibuka dari Navbar)
+  });
 
   @override
-  ProfileScreenState createState() => ProfileScreenState(); // Diubah menjadi publik
+  ProfileScreenState createState() => ProfileScreenState(); 
 }
 
-class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik (tanpa underscore)
+class ProfileScreenState extends State<ProfileScreen> { 
   final DatabaseHelper _dbHelper = DatabaseHelper();
   
   final TextEditingController _namaController = TextEditingController();
@@ -30,7 +36,6 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
   bool _isImageBaru = false; 
   bool _obscurePassword = true; 
 
-  // Variabel untuk mencatat data awal dari database (untuk validasi unsaved)
   String _initialNama = '';
   String _initialPassword = '';
 
@@ -52,7 +57,6 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
         _passwordController.text = userData['password'];
         _email = userData['email'];
         
-        // Catat nilai awal untuk komparasi validasi perpindahan tab
         _initialNama = userData['nama'];
         _initialPassword = userData['password'];
         
@@ -65,7 +69,6 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
     }
   }
 
-  // FUNGSI VALIDASI: Mengembalikan nilai true jika ada perubahan yang belum disimpan
   bool hasUnsavedChanges() {
     if (_isLoading) return false;
     return _namaController.text != _initialNama || 
@@ -183,7 +186,6 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('userName', _namaController.text);
 
-    // Perbarui data acuan awal agar status hasUnsavedChanges menjadi false kembali
     setState(() {
       _initialNama = _namaController.text;
       _initialPassword = _passwordController.text;
@@ -199,7 +201,8 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
       ),
     );
     
-    if (Navigator.canPop(context)) {
+    // PERBAIKAN 2: Hanya lakukan POP (kembali) jika dibuka dari klik foto Dashboard
+    if (widget.isFromDashboard) {
       Navigator.pop(context, true); 
     }
   }
@@ -293,13 +296,13 @@ class ProfileScreenState extends State<ProfileScreen> { // Diubah menjadi publik
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100], // PERUBAHAN DI SINI
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         title: const Text('Pengaturan Profil', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.isFromDashboard,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
