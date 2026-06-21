@@ -32,3 +32,10 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Environments
+.env
+.env.*
+*.env
+
+.dart_tool/
