@@ -37,3 +37,5 @@ google-services.json
 .env
 .env.*
 *.env
+
+.dart_tool/
