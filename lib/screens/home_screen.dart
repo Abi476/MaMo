@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart'; 
+
 import 'dashboard_screen.dart';
 import 'eksplor_screen.dart';
 import 'fav_screen.dart';
@@ -16,29 +17,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // Buat GlobalKey khusus untuk mengontrol State dari ProfileScreen
+  // 1. Tambahkan GlobalKey untuk CurvedNavigationBar (sebagai "remote control")
+  final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey<CurvedNavigationBarState>();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
 
-  // Hubungkan key tersebut ke dalam instansiasi halaman profil
-  // Catatan: 'const' dihapus dari List karena ProfileScreen sekarang menerima key dinamis
+  // Penanda agar saat kita kembalikan animasi secara paksa, aplikasinya tidak looping
+  bool _isReverting = false; 
+
   List<Widget> get _pages => [
     const DashboardScreen(),
     const EksplorScreen(), 
     const FavoritesScreen(), 
-    ProfileScreen(key: _profileKey), // Key dipasang di sini
+    ProfileScreen(key: _profileKey), 
   ];
 
-  // Modifikasi fungsi tap navigasi untuk melakukan validasi
   void _onItemTapped(int index) async {
-    // Jika posisi saat ini di Tab Profil (index 3) dan user menekan tab lain
+    // Jika sedang proses mengembalikan animasi paksa, abaikan ketukan user sementara
+    if (_isReverting) return;
+
     if (_selectedIndex == 3 && index != 3) {
       final profileState = _profileKey.currentState;
       
-      // Panggil fungsi validasi milik ProfileScreen
       if (profileState != null && profileState.hasUnsavedChanges()) {
         bool? tinggalkan = await _tampilkanDialogBelumSimpan();
+        
         if (tinggalkan != true) {
-          return; // Gagalkan perpindahan, user tetap berada di halaman profil
+          // JIKA BATAL: Paksa navbar kembali ke ikon profil (index 3)
+          _isReverting = true;
+          _bottomNavigationKey.currentState?.setPage(3);
+          
+          // Lepas pengaman setelah animasi navbar selesai (sekitar 300ms)
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              setState(() { _isReverting = false; });
+            }
+          });
+          return; // Gagalkan perpindahan halaman
         }
       }
     }
@@ -48,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Pop-Up Validasi ketika data profil belum disimpan
   Future<bool?> _tampilkanDialogBelumSimpan() {
     return showDialog<bool>(
       context: context,
@@ -100,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false), // Kembali/Batal pindah
+                      onPressed: () => Navigator.pop(context, false), 
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: Colors.grey.shade300, width: 2),
@@ -121,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true), // Konfirmasi tinggalkan halaman
+                      onPressed: () => Navigator.pop(context, true), 
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: Colors.orangeAccent,
@@ -238,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
         extendBody: true, 
         body: _pages[_selectedIndex],
         bottomNavigationBar: CurvedNavigationBar(
+          key: _bottomNavigationKey, // 2. Daftarkan remotenya di sini!
           index: _selectedIndex,
           height: 65.0,
           color: Colors.white, 
@@ -245,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.transparent, 
           animationCurve: Curves.easeInOutCubic,
           animationDuration: const Duration(milliseconds: 400),
-          onTap: _onItemTapped, // Mengeksekusi logika validasi sebelum pindah tab
+          onTap: _onItemTapped, 
           items: <Widget>[
             Icon(Icons.dashboard_rounded, size: 30, color: _selectedIndex == 0 ? Colors.white : Colors.blueAccent),
             Icon(Icons.map_rounded, size: 30, color: _selectedIndex == 1 ? Colors.white : Colors.blueAccent),
