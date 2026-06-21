@@ -193,9 +193,7 @@ class _HeroScreenState extends State<HeroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // =========================================================================
-    // TAMPILAN LOADING SCREEN (LATAR BELAKANG PUTIH BERSIH)
-    // =========================================================================
+    // Loading Screen
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.white, // Diubah menjadi putih
