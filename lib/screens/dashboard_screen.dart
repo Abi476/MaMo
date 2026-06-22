@@ -377,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.blueAccent.withOpacity(0.3),
+                          color: Colors.blueAccent.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -469,7 +469,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           width: 50,
                                           height: 50,
                                           decoration: BoxDecoration(
-                                            color: Colors.blueAccent.withOpacity(0.1),
+                                            color: Colors.blueAccent.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: const Icon(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../helpers/database_helper.dart';
@@ -18,47 +17,33 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Controller untuk form Lupa Password
   final TextEditingController _forgotEmailController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
 
-  // Fungsi ala SweetAlert
-  void _showAlert(String title, String message, bool isSuccess, VoidCallback onOk) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  // tooast notification bar
+  void _showToast(String message, bool isSuccess) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
           children: [
             Icon(
-              isSuccess ? Icons.check_circle : Icons.cancel,
-              color: isSuccess ? Colors.green : Colors.red,
-              size: 80,
+              isSuccess ? Icons.check_circle : Icons.error_outline,
+              color: Colors.white,
             ),
-            const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isSuccess ? Colors.blueAccent : Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                onPressed: () {
-                  Navigator.pop(context); // Tutup dialog
-                  onOk(); // Jalankan aksi selanjutnya
-                },
-                child: const Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
               ),
-            )
+            ),
           ],
         ),
+        backgroundColor: isSuccess ? Colors.green.shade600 : Colors.redAccent,
+        behavior: SnackBarBehavior.floating, // Membuatnya mengambang (tidak nempel dasar layar)
+        margin: const EdgeInsets.all(20), // Memberi jarak dari tepi layar
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3), // Toast akan hilang dalam 3 detik
       ),
     );
   }
@@ -66,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loginUser() async {
     // Validasi 1: Form kosong
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showAlert('Peringatan', 'Maaf, email dan password tidak boleh kosong!', false, () {});
+      _showToast('Maaf, email dan password tidak boleh kosong!', false);
       return;
     }
 
@@ -86,15 +71,18 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setInt('userId', user.first['id']);
       await prefs.setString('userName', user.first['nama']);
 
-      _showAlert('Berhasil!', 'Login sukses. Selamat datang di MaMo!', true, () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      });
+      // Tampilkan Toast sukses, lalu pindah layar sedikit lebih lambat agar animasinya terlihat
+      _showToast('Login sukses. Selamat datang di MaMo!', true);
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     } else {
       // Validasi 2: Salah kredensial
-      _showAlert('Gagal Login', 'Maaf, email atau password yang Anda masukkan tidak sesuai.', false, () {});
+      _showToast('Maaf, email atau password yang Anda masukkan salah.', false);
     }
   }
 
@@ -163,9 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   String newPass = _newPasswordController.text.trim();
 
                   if (email.isEmpty || newPass.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Email dan Password baru wajib diisi!')),
-                    );
+                    _showToast('Email dan Password baru wajib diisi!', false);
                     return;
                   }
 
@@ -177,10 +163,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (emailExist) {
                     await _dbHelper.resetPasswordByEmail(email, newPass);
                     Navigator.pop(context); // Tutup bottom sheet
-                    _showAlert('Berhasil Reset', 'Password berhasil diperbarui. Silakan login kembali.', true, () {});
+                    _showToast('Password berhasil diperbarui. Silakan login.', true);
                   } else {
                     Navigator.pop(context);
-                    _showAlert('Email Tidak Ditemukan', 'Maaf, email tersebut belum terdaftar di sistem kami.', false, () {});
+                    _showToast('Maaf, email tersebut belum terdaftar.', false);
                   }
                 },
                 child: const Text(
@@ -206,7 +192,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo Kustom
                 Image.asset(
                   'assets/images/app_logo.png',
                   width: 90,
@@ -221,7 +206,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Text('Map Mobile Explorer', style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 40),
 
-                // Judul Welcome Back
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Welcome Back', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
@@ -246,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Form Input Email
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -259,7 +242,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Form Input Password
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -272,7 +254,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // TOMBOL LUPA PASSWORD
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -285,7 +266,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Tombol Login
                 SizedBox(
                   width: double.infinity,
                   height: 50,

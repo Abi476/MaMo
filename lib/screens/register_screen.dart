@@ -16,43 +16,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _rePasswordController = TextEditingController();
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Fungsi ala SweetAlert (Sama seperti di Login)
-  void _showAlert(String title, String message, bool isSuccess, VoidCallback onOk) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  // SnackBAR
+  void _showToast(String message, bool isSuccess) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
           children: [
             Icon(
-              isSuccess ? Icons.check_circle : Icons.cancel,
-              color: isSuccess ? Colors.green : Colors.red,
-              size: 80,
+              isSuccess ? Icons.check_circle : Icons.error_outline,
+              color: Colors.white,
             ),
-            const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isSuccess ? Colors.blueAccent : Colors.redAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                  onOk();
-                },
-                child: const Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
               ),
-            )
+            ),
           ],
         ),
+        backgroundColor: isSuccess ? Colors.green.shade600 : Colors.redAccent,
+        behavior: SnackBarBehavior.floating, 
+        margin: const EdgeInsets.all(20), 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3), 
       ),
     );
   }
@@ -61,13 +48,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Validasi 1: Kosong
     if (_namaController.text.isEmpty || _emailController.text.isEmpty || 
         _passwordController.text.isEmpty || _rePasswordController.text.isEmpty) {
-      _showAlert('Peringatan', 'Semua kolom wajib diisi!', false, () {});
+      _showToast('Semua kolom wajib diisi!', false);
       return;
     }
 
     // Validasi 2: Password tidak sama
     if (_passwordController.text != _rePasswordController.text) {
-      _showAlert('Gagal', 'Password dan Re-enter Password tidak cocok!', false, () {});
+      _showToast('Password dan Re-enter Password tidak cocok!', false);
       return;
     }
 
@@ -82,13 +69,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       
       // Sukses
-      _showAlert('Berhasil!', 'Akun berhasil dibuat. Silakan login.', true, () {
-        Navigator.pop(context); // Kembali ke halaman Login
-      });
+      _showToast('Akun berhasil dibuat. Silakan login.', true);
+      
+      // Beri jeda sebentar agar notifikasi sempat terbaca sebelum pindah halaman
+      await Future.delayed(const Duration(milliseconds: 800));
+      
+      if (!mounted) return;
+      Navigator.pop(context); // Kembali ke halaman Login
 
     } catch (e) {
       // Error karena email UNIQUE (sudah terdaftar)
-      _showAlert('Gagal Mendaftar', 'Maaf, email tersebut sudah terdaftar!', false, () {});
+      if (!mounted) return;
+      _showToast('Maaf, email tersebut sudah terdaftar!', false);
     }
   }
 
