@@ -120,7 +120,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.pink.withOpacity(0.1),
+                                color: Colors.pink.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -200,7 +200,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                   width: 55,
                                   height: 55,
                                   decoration: BoxDecoration(
-                                    color: Colors.pink.withOpacity(0.1),
+                                    color: Colors.pink.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
